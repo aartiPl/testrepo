@@ -1,7 +1,11 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 val kotlinVersion: String = "1.7.21"
 
 plugins {
     kotlin("jvm") version "1.7.21"
+    application
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 repositories {
@@ -11,6 +15,52 @@ repositories {
 
 group = "io.github.kscripting"
 version = "4.2.0-SNAPSHOT"
+
+val shadowJar by tasks.getting(ShadowJar::class) {
+    // set empty string to classifier and version to get predictable jar file name: build/libs/kscript.jar
+    archiveFileName.set("kscript.jar")
+}
+
+val createKscriptLayout by tasks.register<Copy>("createKscriptLayout") {
+    dependsOn(shadowJar)
+
+    into(layout.projectDirectory)
+
+    from(shadowJar) {
+        into("build/kscript/bin")
+    }
+
+    from("src/kscript") {
+        into("build/kscript/bin")
+    }
+
+    from("src/kscript.bat") {
+        into("build/kscript/bin")
+    }
+}
+
+val packageKscriptDistribution by tasks.register<Zip>("packageKscriptDistribution") {
+    dependsOn(createKscriptLayout)
+
+    from(layout.buildDirectory.dir("kscript")) {
+        into("kscript-${project.version}")
+    }
+
+    archiveFileName.set("kscript-${project.version}-bin.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+
+    from(layout.buildDirectory.dir("kscript-${project.version}"))
+}
+
+val assemble: Task by tasks.getting {
+    dependsOn(packageKscriptDistribution)
+}
+
+
+application {
+    mainClass.set(project.group.toString() + ".KscriptKt")
+}
+
 
 dependencies {
     implementation("commons-cli:commons-cli:1.5.0")
