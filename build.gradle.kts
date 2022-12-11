@@ -61,6 +61,21 @@ application {
     mainClass.set(project.group.toString() + ".KscriptKt")
 }
 
+val shadowDistTar: Task by tasks.getting {
+    enabled = false
+}
+
+val shadowDistZip: Task by tasks.getting {
+    enabled = false
+}
+
+val distTar: Task by tasks.getting {
+    enabled = false
+}
+
+val distZip: Task by tasks.getting {
+    enabled = false
+}
 
 dependencies {
     implementation("commons-cli:commons-cli:1.5.0")
